@@ -8,7 +8,7 @@ class EmbeddingService:
     """Service for generating embeddings using Sentence Transformers"""
     
     def __init__(self):
-        print(f"📦 Loading model: {settings.model_name}")
+        print(f"📦 Loading model: {settings.embedding_model_name}")
         
         # Detect best device (MPS > CUDA > CPU)
         if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -21,7 +21,7 @@ class EmbeddingService:
             device = 'cpu'
             print("⚠️  Using CPU (no GPU acceleration)")
         
-        self.model = SentenceTransformer(settings.model_name, device=device)
+        self.model = SentenceTransformer(settings.embedding_model_name, device=device)
         self.device = device
         print(f"✅ Model loaded on {device}")
     
