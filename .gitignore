@@ -59,6 +59,7 @@ htmlcov/
 models/
 .cache/
 sentence-transformers/
+.env
 
 # Redis
 dump.rdb
