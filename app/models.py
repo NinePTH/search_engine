@@ -58,6 +58,19 @@ class SearchSuggestionResponse(BaseModel):
     query: str
     execution_time_ms: float
 
+class IngredientSuggestionRequest(BaseModel):
+    """Request model for ingredient suggestions"""
+    query: str = Field(..., min_length=1, max_length=50, description="Partial ingredient name for suggestions")
+    limit: int = Field(default=10, ge=1, le=30, description="Maximum suggestions")
+
+class IngredientSuggestionResponse(BaseModel):
+    """Response model for ingredient suggestions"""
+    status: str = "success"
+    suggestions: List[Dict[str, Any]]
+    total: int
+    query: str
+    execution_time_ms: float
+
 class HealthResponse(BaseModel):
     """Health check response"""
     status: str = "healthy"

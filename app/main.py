@@ -8,6 +8,7 @@ from app.config import settings
 from app.database import init_db, get_db_connection
 from app.embeddings import embedding_service
 from app.search import search_service
+from app.ingredients import ingredient_service
 from app.models import (
     SearchRequest,
     SearchResponse,
@@ -17,7 +18,9 @@ from app.models import (
     EmbeddingResponse,
     HealthResponse,
     SearchSuggestionRequest,
-    SearchSuggestionResponse
+    SearchSuggestionResponse,
+    IngredientSuggestionRequest,
+    IngredientSuggestionResponse
 )
 
 # Initialize FastAPI app
@@ -257,7 +260,7 @@ async def ingredient_search(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ingredient search failed: {str(e)}")
 
-@app.post("/search/suggestions", response_model=SearchSuggestionResponse)
+@app.post("/search/menu/suggestions", response_model=SearchSuggestionResponse)
 async def search_suggestions(
     request: SearchSuggestionRequest,
     api_key: str = Depends(verify_api_key)
@@ -345,6 +348,124 @@ async def search_suggestions(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Suggestion search failed: {str(e)}")
+
+@app.post("/ingredients/suggestions", response_model=IngredientSuggestionResponse)
+async def ingredient_suggestions(
+    request: IngredientSuggestionRequest,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    🥗 INGREDIENT SUGGESTIONS: Fast autocomplete for ingredient input
+    
+    **Lightning-fast ingredient autocomplete** - no database queries needed!
+    
+    **Use Cases:**
+    - Ingredient search bar autocomplete
+    - Recipe creation ingredient picker
+    - Shopping list builder
+    - Dietary filter ingredient selection
+    
+    **Features:**
+    - ⚡ Ultra-fast (< 10ms) - uses in-memory lookup
+    - 🎯 Smart matching: exact, prefix, substring, word boundary
+    - 🏷️ Auto-categorization: protein, vegetable, fruit, dairy, etc.
+    - 🌍 Multi-cuisine support: Thai, Asian, Western ingredients
+    
+    **Example Queries:**
+    - "eg" → "Egg", "Eggplant"
+    - "chic" → "Chicken", "Chickpea"
+    - "tom" → "Tomato", "Tomato Sauce"
+    - "milk" → "Milk", "Almond Milk", "Coconut Milk"
+    - "bas" → "Basil", "Thai Basil"
+    
+    **Match Types:**
+    - `exact`: Exact match with ingredient name
+    - `prefix`: Ingredient starts with query
+    - `substring`: Query appears within ingredient name
+    - `word`: Query matches start of word in multi-word ingredient
+    
+    **Categories:**
+    - `protein`: Meat, fish, eggs, tofu
+    - `vegetable`: All vegetables
+    - `fruit`: Fruits including avocado
+    - `dairy`: Milk, cheese, butter, cream
+    - `grain`: Rice, pasta, bread, noodles
+    - `herb_spice`: Herbs and spices
+    - `condiment`: Sauces, oils, seasonings
+    - `other`: Miscellaneous items
+    
+    **Parameters:**
+    - **query**: Partial ingredient name (1-50 chars)
+    - **limit**: Max suggestions (1-30, default 10)
+    
+    **Response Format:**
+    ```json
+    {
+      "status": "success",
+      "suggestions": [
+        {
+          "name": "Egg",
+          "match_type": "prefix",
+          "category": "protein"
+        },
+        {
+          "name": "Eggplant",
+          "match_type": "prefix",
+          "category": "vegetable"
+        }
+      ],
+      "total": 2,
+      "query": "eg",
+      "execution_time_ms": 2.34
+    }
+    ```
+    
+    **Frontend Integration:**
+    ```javascript
+    // Real-time autocomplete (no debounce needed - it's that fast!)
+    const handleIngredientInput = async (query) => {
+      if (query.length < 2) return;
+      
+      const response = await fetch('/ingredients/suggestions', {
+        method: 'POST',
+        headers: { 'X-API-Key': API_KEY },
+        body: JSON.stringify({ query, limit: 10 })
+      });
+      
+      const { suggestions } = await response.json();
+      // Display suggestions grouped by category
+    };
+    ```
+    
+    **Performance:**
+    - No database queries
+    - No ML model inference
+    - Pure in-memory string matching
+    - Typical response: 2-5ms
+    """
+    start_time = time.time()
+    
+    try:
+        # Get ingredient suggestions
+        suggestions = ingredient_service.get_suggestions(
+            query=request.query,
+            limit=request.limit
+        )
+        
+        execution_time = (time.time() - start_time) * 1000
+        
+        return IngredientSuggestionResponse(
+            status="success",
+            suggestions=suggestions,
+            total=len(suggestions),
+            query=request.query,
+            execution_time_ms=round(execution_time, 2)
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ingredient suggestion failed: {str(e)}")
+
+
 
 @app.post("/search/hybrid", response_model=SearchResponse)
 async def hybrid_search(
