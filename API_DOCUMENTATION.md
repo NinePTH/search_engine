@@ -370,7 +370,7 @@ Semantic search endpoint using vector similarity without NLP parsing.
 
 ### Search Suggestions
 
-**POST** `/search/suggestions`
+**POST** `/search/menu/suggestions`
 
 🔍 **Ultra-fast autocomplete** for search input - optimized for real-time suggestions as users type.
 
